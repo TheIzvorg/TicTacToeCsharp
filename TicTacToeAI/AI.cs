@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -39,6 +40,91 @@ namespace TicTacToeAI
     }
     #endregion
     #region Classes
+    public class NeuronLayer : INeuronLayer
+    {
+        private List<INeuron> m_neurons;
+
+        public INeuron this[int index] { get => this[index]; set => this[index] = value; }
+        public int Count { get; set; }
+        public bool IsReadOnly { get; set; }
+
+        public void Add(INeuron item)
+        {
+            if (!IsReadOnly)
+                m_neurons.Add(item);
+            Count = m_neurons.Count;
+        }
+
+        public void ApplyLearning(INeuronNet net)
+        {
+            foreach (INeuron n in m_neurons)
+                n.ApplyLearning(this);
+        }
+
+        public void Clear()
+        {
+            if (!IsReadOnly)
+                m_neurons.Clear();
+            Count = m_neurons.Count;
+        }
+
+        public bool Contains(INeuron item)
+        {
+            return m_neurons.Contains(item);
+        }
+
+        public void CopyTo(INeuron[] array, int arrayIndex)
+        {
+            if (!IsReadOnly)
+                m_neurons.CopyTo(array, arrayIndex);
+            Count = m_neurons.Count;
+        }
+
+        public IEnumerator<INeuron> GetEnumerator()
+        {
+            return m_neurons.GetEnumerator();
+        }
+
+        public int IndexOf(INeuron item)
+        {
+            return m_neurons.IndexOf(item);
+        }
+
+        public void Insert(int index, INeuron item)
+        {
+            if (!IsReadOnly)
+                m_neurons.Insert(index, item);
+            Count = m_neurons.Count;
+        }
+
+        public void Pulse(INeuronNet net)
+        {
+            foreach (INeuron n in m_neurons)
+                n.Pulse(this);
+        }
+
+        public bool Remove(INeuron item)
+        {
+            if (!IsReadOnly)
+            {
+                Count = m_neurons.Count - 1;
+                return m_neurons.Remove(item);
+            }
+            return false;
+        }
+
+        public void RemoveAt(int index)
+        {
+            if (!IsReadOnly)
+                m_neurons.RemoveAt(index);
+            Count = m_neurons.Count;
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return m_neurons.GetEnumerator();
+        }
+    }
     public class Neuron : INeuron
     {
         private NeuronFactor m_bias;
@@ -47,33 +133,14 @@ namespace TicTacToeAI
         private Dictionary<INeuronSignal, NeuronFactor> m_input;
         private double m_output;
 
-        public NeuronFactor Bias
-        {
-            get { return m_bias; }
-            set { m_bias = value; }
-        }
-        public double BiasWeight
-        {
-            get { return m_biasWeight; }
-            set { m_biasWeight = value; }
-        }
-        public double Error
-        {
-            get { return m_error; }
-            set { m_error = value; }
-        }
-        public Dictionary<INeuronSignal, NeuronFactor> Input
-        {
-            get { return m_input; }
-        }
-        public double Output
-        {
-            get { return m_output; }
-            set { m_output = value; }
-        }
+        public NeuronFactor Bias { get => m_bias; set => m_bias = value; }
+        public double BiasWeight {  get => m_biasWeight; set => m_biasWeight = value; }
+        public double Error { get => m_error; set => m_error = value; }
+        public Dictionary<INeuronSignal, NeuronFactor> Input { get => m_input; }
+        public double Output { get => m_output; set => m_output = value; }
         public void Pulse(INeuronLayer layer)
         {
-            lock (layer)
+            lock (this)
             {
                 m_output = 0;
                 foreach (KeyValuePair<INeuronSignal, NeuronFactor> item in m_input)
@@ -84,7 +151,7 @@ namespace TicTacToeAI
         }
         public void ApplyLearning(INeuronLayer layer)
         {
-            lock (layer)
+            lock (this)
             {
                 m_output += m_biasWeight;
                 m_biasWeight = 0;
