@@ -45,6 +45,8 @@ namespace TicTacToeAI
         private INeuronLayer m_inputLayer;
         private INeuronLayer m_hiddenLayer;
         private INeuronLayer m_outputLayer;
+        private double m_learningRate;
+
         public INeuronLayer InputLayer { get => m_inputLayer; set => m_inputLayer = value; }
         public INeuronLayer HiddenLayer { get => m_hiddenLayer; set => m_hiddenLayer = value; }
         public INeuronLayer OutPut { get => m_outputLayer; set => m_outputLayer = value; }
@@ -71,6 +73,24 @@ namespace TicTacToeAI
                 for (int j = 0; j < m_hiddenLayer.Count; j++)
                     m_outputLayer[i].Input.Add(m_hiddenLayer[j], new NeuronFactor(rnd.NextDouble()));
         }
+        public void Train(double[] input, double[] desiredResults)
+        {
+            if (input.Length != m_inputLayer.Count)
+                throw new ArgumentException($"В этой сети {m_inputLayer.Count} точек входа");
+            for (int i = 0; i < m_inputLayer.Count; i++)
+            {
+                Neuron n = m_inputLayer[i] as Neuron;
+                if (null != n)
+                    n.Output = input[i];
+            }
+            Pulse(this);
+            BackPropagation(desiredResults);
+        }
+        public void Train(double[][] inputs, double[][] expected)
+        {
+            for (int i = 0; i < inputs.Length; i++)
+                Train(inputs[i], expected[i]);
+        }
         private void BackPropagation(double[] desiredResults)
         {
             int i;
@@ -89,7 +109,31 @@ namespace TicTacToeAI
                 error = 0;
                 for (int j = 0; j < m_outputLayer.Count; j++)
                 {
+                    outputNode = m_outputLayer[j];
+                    error += outputNode.Error * outputNode.Input[node].Weight * node.Output * (1.0 - node.Output);
+                }
+                node.Error = error;
+            }
 
+            for (i = 0; i < m_hiddenLayer.Count; i++)
+            {
+                node = m_hiddenLayer[i];
+                for (int j = 0; j < m_outputLayer.Count; j++)
+                {
+                    outputNode = m_outputLayer[j];
+                    outputNode.Input[node].Weight += m_learningRate * m_outputLayer[j].Error * node.Output;
+                    outputNode.Bias.Delta += m_learningRate * m_outputLayer[j].Error * outputNode.Bias.Weight;
+                }
+            }
+
+            for (i = 0; i < m_inputLayer.Count; i++)
+            {
+                inputNode = m_inputLayer[i];
+                for (int j = 0; j < m_hiddenLayer.Count; j++)
+                {
+                    hiddenNode = m_hiddenLayer[j];
+                    hiddenNode.Input[inputNode].Weight += m_learningRate * hiddenNode.Error * inputNode.Output;
+                    hiddenNode.Bias.Delta += m_learningRate * hiddenNode.Error * inputNode.Bias.Weight;
                 }
             }
         }
@@ -121,8 +165,8 @@ namespace TicTacToeAI
 
         public void Add(INeuron item)
         {
-            if (!IsReadOnly)
-                m_neurons.Add(item);
+            if (IsReadOnly) return;
+            m_neurons.Add(item);
             Count = m_neurons.Count;
         }
 
@@ -134,8 +178,8 @@ namespace TicTacToeAI
 
         public void Clear()
         {
-            if (!IsReadOnly)
-                m_neurons.Clear();
+            if (IsReadOnly) return;
+            m_neurons.Clear();
             Count = m_neurons.Count;
         }
 
@@ -146,8 +190,8 @@ namespace TicTacToeAI
 
         public void CopyTo(INeuron[] array, int arrayIndex)
         {
-            if (!IsReadOnly)
-                m_neurons.CopyTo(array, arrayIndex);
+            if (IsReadOnly) return;
+            m_neurons.CopyTo(array, arrayIndex);
             Count = m_neurons.Count;
         }
 
@@ -163,8 +207,8 @@ namespace TicTacToeAI
 
         public void Insert(int index, INeuron item)
         {
-            if (!IsReadOnly)
-                m_neurons.Insert(index, item);
+            if (IsReadOnly) return;
+            m_neurons.Insert(index, item);
             Count = m_neurons.Count;
         }
 
@@ -176,18 +220,15 @@ namespace TicTacToeAI
 
         public bool Remove(INeuron item)
         {
-            if (!IsReadOnly)
-            {
-                Count = m_neurons.Count - 1;
-                return m_neurons.Remove(item);
-            }
-            return false;
+            if (IsReadOnly) return false;
+            Count = m_neurons.Count - 1;
+            return m_neurons.Remove(item);
         }
 
         public void RemoveAt(int index)
         {
-            if (!IsReadOnly)
-                m_neurons.RemoveAt(index);
+            if (IsReadOnly) return;
+            m_neurons.RemoveAt(index);
             Count = m_neurons.Count;
         }
 

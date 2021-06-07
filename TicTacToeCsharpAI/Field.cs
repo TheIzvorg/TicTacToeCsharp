@@ -12,10 +12,8 @@ namespace TicTacToeCsharp
         
         const int dimensionSize = 3;
         private int[,] field = new int[dimensionSize, dimensionSize];
-        public int[,] getField()
-        {
-            return field;
-        }
+        public int[,] Map { get => field; set => field = value; }
+        public int this[int index1, int index2] { get => field[index1, index2]; set => field[index1, index2] = value; }
         public Field()
         {
             for(int i = 0; i < field.Length; i++)
@@ -39,8 +37,10 @@ namespace TicTacToeCsharp
                     Console.Write(" X");
                 else if (field[i / dimensionSize, i % dimensionSize] == (int)STATUS.O)
                     Console.Write(" O");
+                else
+                    throw new Exception("Не может быть такого значения");
             }*/
-            
+
             for (int i = 0; i < dimensionSize; i++)
             {
                 for (int j = 0; j < dimensionSize; j++)

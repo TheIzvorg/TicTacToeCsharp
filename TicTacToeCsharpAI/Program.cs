@@ -12,7 +12,7 @@ namespace TicTacToeCsharp
         static void Main(string[] args)
         {
             Field field = new Field();
-            AI bot = new AI(field.getField());
+            AI bot = new AI(field.Map);
             Console.ReadLine();
         }
     }
