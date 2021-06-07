@@ -40,6 +40,77 @@ namespace TicTacToeAI
     }
     #endregion
     #region Classes
+    public class NeuronNet : INeuronNet
+    {
+        private INeuronLayer m_inputLayer;
+        private INeuronLayer m_hiddenLayer;
+        private INeuronLayer m_outputLayer;
+        public INeuronLayer InputLayer { get => m_inputLayer; set => m_inputLayer = value; }
+        public INeuronLayer HiddenLayer { get => m_hiddenLayer; set => m_hiddenLayer = value; }
+        public INeuronLayer OutPut { get => m_outputLayer; set => m_outputLayer = value; }
+
+        public void Initialize(int randomSeed, int inputNeuronCount, int hiddenNeuronCount, int outputNeuronCount)
+        {
+            int i;
+            Random rnd = new Random(randomSeed);
+            m_inputLayer = new NeuronLayer();
+            m_hiddenLayer = new NeuronLayer();
+            m_outputLayer = new NeuronLayer();
+
+            for (i = 0; i < inputNeuronCount; i++)
+                m_inputLayer.Add(new Neuron());
+            for (i = 0; i < hiddenNeuronCount; i++)
+                m_hiddenLayer.Add(new Neuron());
+            for (i = 0; i < outputNeuronCount; i++)
+                m_outputLayer.Add(new Neuron());
+
+            for (i = 0; i < m_hiddenLayer.Count; i++)
+                for (int j = 0; j < m_inputLayer.Count; i++)
+                    m_hiddenLayer[i].Input.Add(m_inputLayer[j], new NeuronFactor(rnd.NextDouble()));
+            for (i = 0; i < m_outputLayer.Count; i++)
+                for (int j = 0; j < m_hiddenLayer.Count; j++)
+                    m_outputLayer[i].Input.Add(m_hiddenLayer[j], new NeuronFactor(rnd.NextDouble()));
+        }
+        private void BackPropagation(double[] desiredResults)
+        {
+            int i;
+            double temp, error;
+            INeuron outputNode, inputNode, hiddenNode, node, node2;
+
+            for (i = 0; i < m_outputLayer.Count; i++)
+            {
+                temp = m_outputLayer[i].Output;
+                m_outputLayer[i].Error = (desiredResults[i] - temp) * temp * (1.0F - temp);
+            }
+
+            for (i = 0; i < m_hiddenLayer.Count; i++)
+            {
+                node = m_hiddenLayer[i];
+                error = 0;
+                for (int j = 0; j < m_outputLayer.Count; j++)
+                {
+
+                }
+            }
+        }
+        public void ApplyLearning(INeuronNet net)
+        {
+            lock (this)
+            {
+                m_hiddenLayer.ApplyLearning(this);
+                m_outputLayer.ApplyLearning(this);
+            }
+        }
+
+        public void Pulse(INeuronNet net)
+        {
+            lock (this)
+            {
+                m_hiddenLayer.Pulse(this);
+                m_outputLayer.Pulse(this);
+            }
+        }
+    }
     public class NeuronLayer : INeuronLayer
     {
         private List<INeuron> m_neurons;
